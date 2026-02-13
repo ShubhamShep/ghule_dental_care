@@ -56,7 +56,7 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/ghule_dental_care">
       <AuthProvider>
         <AppRoutes />
         <Toaster
