@@ -15,6 +15,7 @@ import Procedures from './pages/Procedures'
 import TreatmentPlans from './pages/TreatmentPlans'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Prescriptions from './pages/Prescriptions'
 
 function AppRoutes() {
   const { user, loading } = useAuth()
@@ -46,6 +47,7 @@ function AppRoutes() {
         <Route path="/dental-chart" element={<DentalChart />} />
         <Route path="/procedures" element={<Procedures />} />
         <Route path="/treatment-plans" element={<TreatmentPlans />} />
+        <Route path="/prescriptions" element={<Prescriptions />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

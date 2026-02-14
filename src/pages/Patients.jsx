@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Plus, Eye, Edit, Trash2, X, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import { SkeletonTable } from '../components/SkeletonLoader'
 
 const initialForm = {
     full_name: '', date_of_birth: '', gender: 'male', phone: '', email: '',
-    address: '', blood_group: '', emergency_contact: '', allergies: '', medical_history: ''
+    address: '', blood_group: '', emergency_contact: '', emergency_phone: '',
+    allergies: '', medical_conditions: '', current_medications: '',
 }
 
 export default function Patients() {
@@ -53,8 +55,10 @@ export default function Patients() {
             address: patient.address || '',
             blood_group: patient.blood_group || '',
             emergency_contact: patient.emergency_contact || '',
+            emergency_phone: patient.emergency_phone || '',
             allergies: patient.allergies || '',
-            medical_history: patient.medical_history || '',
+            medical_conditions: patient.medical_conditions || '',
+            current_medications: patient.current_medications || '',
         })
         setShowModal(true)
     }
@@ -88,10 +92,10 @@ export default function Patients() {
         else { toast.success('Patient deleted'); fetchPatients() }
     }
 
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    if (loading) return <div className="page-fade-in"><SkeletonTable rows={6} cols={6} /></div>
 
     return (
-        <div>
+        <div className="page-fade-in">
             <div className="page-toolbar">
                 <div className="page-toolbar-left">
                     <div className="search-box">
@@ -119,6 +123,7 @@ export default function Patients() {
                                 <th>Gender</th>
                                 <th>Phone</th>
                                 <th>Blood Group</th>
+                                <th>Allergies</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -134,7 +139,12 @@ export default function Patients() {
                                         <td>{age}</td>
                                         <td><span className={`badge ${p.gender}`}>{p.gender}</span></td>
                                         <td>{p.phone || '—'}</td>
-                                        <td>{p.blood_group || '—'}</td>
+                                        <td><span style={{ fontWeight: 600, color: 'var(--danger)' }}>{p.blood_group || '—'}</span></td>
+                                        <td>
+                                            {p.allergies ? (
+                                                <span className="badge cancelled" style={{ fontSize: '0.65rem' }}>⚠ {p.allergies.slice(0, 20)}{p.allergies.length > 20 ? '...' : ''}</span>
+                                            ) : <span style={{ color: 'var(--slate-400)', fontSize: '0.75rem' }}>None</span>}
+                                        </td>
                                         <td>
                                             <div className="action-btns">
                                                 <button className="action-btn" title="View" onClick={() => navigate(`/patients/${p.id}`)}>
@@ -153,7 +163,7 @@ export default function Patients() {
                             })}
                             {filtered.length === 0 && (
                                 <tr>
-                                    <td colSpan={7}>
+                                    <td colSpan={8}>
                                         <div className="empty-state">
                                             <Users />
                                             <h3>No patients found</h3>
@@ -170,13 +180,14 @@ export default function Patients() {
             {/* Add/Edit Modal */}
             {showModal && (
                 <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>{editingId ? 'Edit Patient' : 'Add New Patient'}</h2>
                             <button className="modal-close" onClick={() => setShowModal(false)}><X size={18} /></button>
                         </div>
                         <form onSubmit={handleSave}>
                             <div className="modal-body">
+                                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--slate-400)', marginBottom: 12 }}>Personal Information</h4>
                                 <div className="form-grid">
                                     <div className="field full">
                                         <label>Full Name *</label>
@@ -206,6 +217,10 @@ export default function Patients() {
                                         <label>Address</label>
                                         <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
                                     </div>
+                                </div>
+
+                                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--slate-400)', margin: '20px 0 12px' }}>Medical Information</h4>
+                                <div className="form-grid">
                                     <div className="field">
                                         <label>Blood Group</label>
                                         <select value={form.blood_group} onChange={(e) => setForm({ ...form, blood_group: e.target.value })}>
@@ -216,16 +231,24 @@ export default function Patients() {
                                         </select>
                                     </div>
                                     <div className="field">
-                                        <label>Emergency Contact</label>
-                                        <input value={form.emergency_contact} onChange={(e) => setForm({ ...form, emergency_contact: e.target.value })} />
+                                        <label>Emergency Contact Name</label>
+                                        <input value={form.emergency_contact} onChange={(e) => setForm({ ...form, emergency_contact: e.target.value })} placeholder="Contact name" />
+                                    </div>
+                                    <div className="field">
+                                        <label>Emergency Phone</label>
+                                        <input value={form.emergency_phone} onChange={(e) => setForm({ ...form, emergency_phone: e.target.value })} placeholder="Emergency phone" />
                                     </div>
                                     <div className="field full">
-                                        <label>Allergies</label>
-                                        <textarea value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} rows={2} />
+                                        <label>Allergies ⚠️</label>
+                                        <textarea value={form.allergies} onChange={(e) => setForm({ ...form, allergies: e.target.value })} rows={2} placeholder="e.g., Penicillin, Latex, Lidocaine" />
                                     </div>
                                     <div className="field full">
-                                        <label>Medical History</label>
-                                        <textarea value={form.medical_history} onChange={(e) => setForm({ ...form, medical_history: e.target.value })} rows={2} />
+                                        <label>Medical Conditions</label>
+                                        <textarea value={form.medical_conditions} onChange={(e) => setForm({ ...form, medical_conditions: e.target.value })} rows={2} placeholder="e.g., Diabetes, Hypertension, Heart Disease" />
+                                    </div>
+                                    <div className="field full">
+                                        <label>Current Medications</label>
+                                        <textarea value={form.current_medications} onChange={(e) => setForm({ ...form, current_medications: e.target.value })} rows={2} placeholder="e.g., Metformin 500mg, Amlodipine 5mg" />
                                     </div>
                                 </div>
                             </div>

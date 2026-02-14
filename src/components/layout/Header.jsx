@@ -10,6 +10,7 @@ const pageTitles = {
     '/dental-chart': { title: 'Dental Chart', subtitle: 'Interactive tooth map' },
     '/procedures': { title: 'Procedures', subtitle: 'Dental procedure catalog' },
     '/treatment-plans': { title: 'Treatment Plans', subtitle: 'Multi-visit treatment tracking' },
+    '/prescriptions': { title: 'Prescriptions', subtitle: 'Create & manage prescriptions' },
     '/reports': { title: 'Reports', subtitle: 'Analytics & data export' },
     '/settings': { title: 'Settings', subtitle: 'Clinic configuration' },
 }

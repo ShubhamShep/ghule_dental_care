@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Search, Plus, X, CheckCircle, XCircle, CalendarDays } from 'lucide-react'
+import { Search, Plus, X, CheckCircle, XCircle, CalendarDays, MessageCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import { SkeletonTable } from '../components/SkeletonLoader'
 
 const initialForm = {
     patient_id: '', doctor_id: '', appointment_date: '', appointment_time: '', reason: '', notes: ''
@@ -23,10 +24,10 @@ export default function Appointments() {
     const fetchData = async () => {
         const [apptRes, patRes, docRes] = await Promise.all([
             supabase.from('appointments')
-                .select('*, patients(full_name, patient_id), doctors(full_name)')
+                .select('*, patients(full_name, patient_id, phone), doctors(full_name)')
                 .order('appointment_date', { ascending: false })
                 .order('appointment_time', { ascending: false }),
-            supabase.from('patients').select('id, full_name, patient_id').order('full_name'),
+            supabase.from('patients').select('id, full_name, patient_id, phone').order('full_name'),
             supabase.from('doctors').select('id, full_name, specialization').eq('is_active', true).order('full_name'),
         ])
         setAppointments(apptRes.data || [])
@@ -66,10 +67,27 @@ export default function Appointments() {
         else { toast.success(`Appointment ${status}`); fetchData() }
     }
 
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    const sendWhatsAppReminder = (appt) => {
+        const phone = appt.patients?.phone?.replace(/[^0-9]/g, '')
+        if (!phone) {
+            toast.error('Patient has no phone number')
+            return
+        }
+        const phoneNum = phone.startsWith('91') ? phone : `91${phone}`
+        const date = new Date(appt.appointment_date).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        const time = appt.appointment_time?.slice(0, 5) || ''
+        const doctor = appt.doctors?.full_name || 'your dentist'
+        const message = `🦷 *Ghule Dental Care - Appointment Reminder*\n\nDear ${appt.patients?.full_name},\n\nThis is a friendly reminder for your dental appointment:\n\n📅 *Date:* ${date}\n⏰ *Time:* ${time}\n👨‍⚕️ *Doctor:* ${doctor}\n${appt.reason ? `📋 *Reason:* ${appt.reason}` : ''}\n\nPlease arrive 10 minutes early. If you need to reschedule, please call us.\n\n_Ghule Dental Care_`
+
+        const url = `https://wa.me/${phoneNum}?text=${encodeURIComponent(message)}`
+        window.open(url, '_blank')
+        toast.success('WhatsApp opened with reminder!')
+    }
+
+    if (loading) return <div className="page-fade-in"><SkeletonTable rows={6} cols={6} /></div>
 
     return (
-        <div>
+        <div className="page-fade-in">
             <div className="page-toolbar">
                 <div className="page-toolbar-left">
                     <div className="search-box">
@@ -118,16 +136,22 @@ export default function Appointments() {
                                     <td>{a.reason || '—'}</td>
                                     <td><span className={`badge ${a.status}`}>{a.status}</span></td>
                                     <td>
-                                        {a.status === 'scheduled' && (
-                                            <div className="action-btns">
-                                                <button className="action-btn" title="Complete" onClick={() => updateStatus(a.id, 'completed')}>
-                                                    <CheckCircle size={16} style={{ color: 'var(--success)' }} />
-                                                </button>
-                                                <button className="action-btn danger" title="Cancel" onClick={() => updateStatus(a.id, 'cancelled')}>
-                                                    <XCircle size={16} />
-                                                </button>
-                                            </div>
-                                        )}
+                                        <div className="action-btns">
+                                            {a.status === 'scheduled' && (
+                                                <>
+                                                    <button className="action-btn" title="Send WhatsApp Reminder" onClick={() => sendWhatsAppReminder(a)}
+                                                        style={{ color: '#25D366' }}>
+                                                        <MessageCircle size={16} />
+                                                    </button>
+                                                    <button className="action-btn" title="Complete" onClick={() => updateStatus(a.id, 'completed')}>
+                                                        <CheckCircle size={16} style={{ color: 'var(--success)' }} />
+                                                    </button>
+                                                    <button className="action-btn danger" title="Cancel" onClick={() => updateStatus(a.id, 'cancelled')}>
+                                                        <XCircle size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

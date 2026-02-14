@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Users, CalendarDays, IndianRupee, AlertCircle, UserPlus, Clock } from 'lucide-react'
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+import { Users, CalendarDays, IndianRupee, AlertCircle } from 'lucide-react'
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { supabase } from '../lib/supabase'
+import { SkeletonStats, SkeletonChart } from '../components/SkeletonLoader'
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b']
 
@@ -14,6 +15,7 @@ export default function Dashboard() {
     const [revenueTrend, setRevenueTrend] = useState([])
     const [procedureRevenue, setProcedureRevenue] = useState([])
     const [todaySchedule, setTodaySchedule] = useState([])
+    const [followUps, setFollowUps] = useState([])
     const [loading, setLoading] = useState(true)
     const navigate = useNavigate()
     const today = new Date().toISOString().split('T')[0]
@@ -21,12 +23,11 @@ export default function Dashboard() {
     useEffect(() => { fetchDashboard() }, [])
 
     const fetchDashboard = async () => {
-        const [patsRes, apptsRes, invoicesRes, todayRes, allApptsRes, invoiceItemsRes] = await Promise.all([
+        const [patsRes, apptsRes, invoicesRes, todayRes, invoiceItemsRes] = await Promise.all([
             supabase.from('patients').select('id, full_name, patient_id, gender, phone, created_at').order('created_at', { ascending: false }),
             supabase.from('appointments').select('*, patients(full_name), doctors(full_name)').gte('appointment_date', today).order('appointment_date').order('appointment_time'),
             supabase.from('invoices').select('*, patients(full_name)').order('issued_date', { ascending: false }),
-            supabase.from('appointments').select('*, patients(full_name), doctors(full_name)').eq('appointment_date', today).order('appointment_time'),
-            supabase.from('appointments').select('id, status, appointment_date'),
+            supabase.from('appointments').select('*, patients(full_name, phone), doctors(full_name)').eq('appointment_date', today).order('appointment_time'),
             supabase.from('invoice_items').select('description, total'),
         ])
 
@@ -35,7 +36,6 @@ export default function Dashboard() {
         const invoices = invoicesRes.data || []
         const todayAppts = todayRes.data || []
 
-        // Stats
         const totalRevenue = invoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0)
         const pendingInvs = invoices.filter(i => i.status !== 'paid')
         const totalOutstanding = pendingInvs.reduce((s, i) => s + (Number(i.total_amount) - Number(i.paid_amount)), 0)
@@ -55,40 +55,51 @@ export default function Dashboard() {
         setUpcomingAppts(upcoming.slice(0, 5))
         setTodaySchedule(todayAppts)
 
-        // Patient registration trend (last 6 months)
+        // Follow-ups: completed appointments in last 30 days
+        const completedRecent = (apptsRes.data || []).filter(a =>
+            a.status === 'completed' && new Date(a.appointment_date) >= thirtyDaysAgo
+        ).slice(0, 5)
+        setFollowUps(completedRecent)
+
+        // Patient trend
         const monthCounts = {}
         patients.forEach(p => {
             const m = p.created_at?.slice(0, 7)
             if (m) monthCounts[m] = (monthCounts[m] || 0) + 1
         })
-        const sortedMonths = Object.keys(monthCounts).sort().slice(-6)
-        setPatientTrend(sortedMonths.map(m => ({ month: m, count: monthCounts[m] })))
+        setPatientTrend(Object.keys(monthCounts).sort().slice(-6).map(m => ({ month: m, count: monthCounts[m] })))
 
-        // Revenue trend (last 6 months)
+        // Revenue trend
         const revMonths = {}
         invoices.forEach(inv => {
             const m = inv.issued_date?.slice(0, 7)
             if (m) revMonths[m] = (revMonths[m] || 0) + Number(inv.paid_amount || 0)
         })
-        const sortedRevMonths = Object.keys(revMonths).sort().slice(-6)
-        setRevenueTrend(sortedRevMonths.map(m => ({ month: m, revenue: revMonths[m] })))
+        setRevenueTrend(Object.keys(revMonths).sort().slice(-6).map(m => ({ month: m, revenue: revMonths[m] })))
 
-        // Top procedures by revenue
+        // Procedure revenue
         const procRevMap = {}
             ; (invoiceItemsRes.data || []).forEach(item => {
                 const desc = item.description || 'Other'
                 procRevMap[desc] = (procRevMap[desc] || 0) + Number(item.total || 0)
             })
-        const topProcs = Object.entries(procRevMap).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value }))
-        setProcedureRevenue(topProcs)
+        setProcedureRevenue(Object.entries(procRevMap).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([name, value]) => ({ name, value })))
 
         setLoading(false)
     }
 
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    if (loading) return (
+        <div className="page-fade-in">
+            <SkeletonStats />
+            <div className="dashboard-grid" style={{ marginTop: 20 }}>
+                <SkeletonChart />
+                <SkeletonChart />
+            </div>
+        </div>
+    )
 
     return (
-        <div>
+        <div className="page-fade-in">
             {/* Stats Grid */}
             <div className="stats-grid">
                 <div className="stat-card emerald" onClick={() => navigate('/patients')} style={{ cursor: 'pointer' }}>
@@ -157,7 +168,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Second Row: Procedure Pie + Today Schedule */}
+            {/* Procedure Pie + Today Schedule */}
             <div className="dashboard-grid" style={{ marginTop: 20 }}>
                 <div className="card">
                     <div className="card-header"><h3>Revenue by Procedure</h3></div>
@@ -208,7 +219,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Third Row: Recent Patients + Upcoming Appointments */}
+            {/* Recent Patients + Follow-ups */}
             <div className="dashboard-grid" style={{ marginTop: 20 }}>
                 <div className="card">
                     <div className="card-header">

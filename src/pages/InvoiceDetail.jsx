@@ -1,25 +1,32 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Printer, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Printer, CheckCircle, CreditCard } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import { SkeletonCard } from '../components/SkeletonLoader'
+
+const PAYMENT_ICONS = { cash: '💵', upi: '📱', card: '💳', insurance: '🏥', other: '📋' }
 
 export default function InvoiceDetail() {
     const { id } = useParams()
     const navigate = useNavigate()
     const [invoice, setInvoice] = useState(null)
     const [items, setItems] = useState([])
+    const [clinicInfo, setClinicInfo] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [payAmount, setPayAmount] = useState('')
 
     useEffect(() => { fetchInvoice() }, [id])
 
     const fetchInvoice = async () => {
-        const [invRes, itemsRes] = await Promise.all([
+        const [invRes, itemsRes, settingsRes] = await Promise.all([
             supabase.from('invoices').select('*, patients(full_name, patient_id, phone, email, address)').eq('id', id).single(),
             supabase.from('invoice_items').select('*').eq('invoice_id', id),
+            supabase.from('clinic_settings').select('*').limit(1).single(),
         ])
         setInvoice(invRes.data)
         setItems(itemsRes.data || [])
+        setClinicInfo(settingsRes.data)
         setLoading(false)
     }
 
@@ -32,29 +39,50 @@ export default function InvoiceDetail() {
         else { toast.success('Invoice marked as paid'); fetchInvoice() }
     }
 
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    const recordPartialPayment = async () => {
+        const amount = Number(payAmount)
+        if (!amount || amount <= 0) { toast.error('Enter a valid amount'); return }
+        const newPaid = Number(invoice.paid_amount) + amount
+        const newStatus = newPaid >= Number(invoice.total_amount) ? 'paid' : 'partial'
+        const { error } = await supabase
+            .from('invoices')
+            .update({ status: newStatus, paid_amount: Math.min(newPaid, Number(invoice.total_amount)) })
+            .eq('id', id)
+        if (error) toast.error(error.message)
+        else { toast.success(`₹${amount.toLocaleString()} payment recorded`); setPayAmount(''); fetchInvoice() }
+    }
+
+    if (loading) return <div className="page-fade-in" style={{ maxWidth: 800, margin: '0 auto' }}><SkeletonCard /><div style={{ marginTop: 16 }}><SkeletonCard /></div></div>
+
     if (!invoice) return <div className="empty-state"><h3>Invoice not found</h3></div>
 
     const balance = Number(invoice.total_amount) - Number(invoice.paid_amount)
 
     return (
-        <div className="invoice-page">
+        <div className="page-fade-in invoice-page">
             <button className="back-btn" onClick={() => navigate('/billing')}>
                 <ArrowLeft /> Back to Billing
             </button>
 
             <div className="invoice-card">
+                {/* Clinic Letterhead */}
                 <div className="invoice-header-bar">
-                    <div>
-                        <h2>Invoice</h2>
-                        <div className="inv-number">{invoice.invoice_number}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <img src="/ghule_dental_care/logo.svg" alt="" width="40" height="40" style={{ borderRadius: 8 }} />
+                        <div>
+                            <h2>{clinicInfo?.clinic_name || 'Ghule Dental Care'}</h2>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--slate-400)' }}>
+                                {clinicInfo?.address || 'Dental Clinic'}
+                                {clinicInfo?.phone ? ` · Ph: ${clinicInfo.phone}` : ''}
+                            </div>
+                        </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <span className={`badge ${invoice.status}`} style={{ fontSize: '0.875rem', padding: '6px 14px' }}>
                             {invoice.status.toUpperCase()}
                         </span>
                         <div style={{ marginTop: 8, fontSize: '0.8125rem', color: 'var(--slate-400)' }}>
-                            Issued: {new Date(invoice.issued_date).toLocaleDateString()}
+                            {new Date(invoice.issued_date).toLocaleDateString()}
                         </div>
                     </div>
                 </div>
@@ -62,8 +90,16 @@ export default function InvoiceDetail() {
                 <div className="invoice-details">
                     <div className="invoice-parties">
                         <div className="invoice-party">
-                            <h4>From</h4>
-                            <p><strong>MediCare Pro Clinic</strong><br />123 Medical Street<br />Healthcare City, India<br />Phone: +91-1234567890</p>
+                            <h4>Invoice</h4>
+                            <p style={{ fontWeight: 600, fontSize: '1.125rem', color: 'var(--primary-600)' }}>{invoice.invoice_number}</p>
+                            {invoice.payment_method && (
+                                <p style={{ marginTop: 8, fontSize: '0.8125rem' }}>
+                                    {PAYMENT_ICONS[invoice.payment_method] || '📋'} {invoice.payment_method.toUpperCase()}
+                                </p>
+                            )}
+                            {clinicInfo?.gst_number && (
+                                <p style={{ fontSize: '0.75rem', color: 'var(--slate-400)', marginTop: 4 }}>GST: {clinicInfo.gst_number}</p>
+                            )}
                         </div>
                         <div className="invoice-party">
                             <h4>Bill To</h4>
@@ -126,18 +162,26 @@ export default function InvoiceDetail() {
                             </div>
                         </div>
                     </div>
-
-                    {invoice.payment_method && (
-                        <div style={{ marginTop: 16, fontSize: '0.8125rem', color: 'var(--slate-500)' }}>
-                            Payment Method: <strong style={{ color: 'var(--slate-700)' }}>{invoice.payment_method}</strong>
-                        </div>
-                    )}
                 </div>
 
                 <div className="invoice-actions">
+                    {invoice.status !== 'paid' && balance > 0 && (
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <input
+                                type="number"
+                                placeholder="₹ Amount"
+                                value={payAmount}
+                                onChange={(e) => setPayAmount(e.target.value)}
+                                style={{ width: 120, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.875rem' }}
+                            />
+                            <button className="btn btn-secondary" onClick={recordPartialPayment}>
+                                <CreditCard size={16} /> Record Payment
+                            </button>
+                        </div>
+                    )}
                     {invoice.status !== 'paid' && (
                         <button className="btn btn-primary" onClick={markAsPaid}>
-                            <CheckCircle size={16} /> Mark as Paid
+                            <CheckCircle size={16} /> Mark Fully Paid
                         </button>
                     )}
                     <button className="btn btn-secondary" onClick={() => window.print()}>

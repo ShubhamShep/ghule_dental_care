@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Plus, X, Eye, Receipt } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import { SkeletonTable } from '../components/SkeletonLoader'
 
 export default function Billing() {
     const [invoices, setInvoices] = useState([])
@@ -95,10 +96,10 @@ export default function Billing() {
         }
     }
 
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    if (loading) return <div className="page-fade-in"><SkeletonTable rows={6} cols={6} /></div>
 
     return (
-        <div>
+        <div className="page-fade-in">
             <div className="page-toolbar">
                 <div className="page-toolbar-left">
                     <div className="search-box">
@@ -192,9 +193,11 @@ export default function Billing() {
                                     <div className="field">
                                         <label>Payment Method</label>
                                         <select value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
-                                            <option value="cash">Cash</option>
-                                            <option value="card">Card</option>
-                                            <option value="online">Online</option>
+                                            <option value="cash">💵 Cash</option>
+                                            <option value="upi">📱 UPI</option>
+                                            <option value="card">💳 Card</option>
+                                            <option value="insurance">🏥 Insurance</option>
+                                            <option value="other">Other</option>
                                         </select>
                                     </div>
                                 </div>
