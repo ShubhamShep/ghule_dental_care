@@ -16,6 +16,11 @@ import TreatmentPlans from './pages/TreatmentPlans'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
 import Prescriptions from './pages/Prescriptions'
+import PastDentalTreatment from './pages/PastDentalTreatment'
+import Investigations from './pages/Investigations'
+import Diagnosis from './pages/Diagnosis'
+import ConsentForms from './pages/ConsentForms'
+import Accounting from './pages/Accounting'
 
 function AppRoutes() {
   const { user, loading } = useAuth()
@@ -48,6 +53,11 @@ function AppRoutes() {
         <Route path="/procedures" element={<Procedures />} />
         <Route path="/treatment-plans" element={<TreatmentPlans />} />
         <Route path="/prescriptions" element={<Prescriptions />} />
+        <Route path="/past-dental-treatment" element={<PastDentalTreatment />} />
+        <Route path="/investigations" element={<Investigations />} />
+        <Route path="/diagnosis" element={<Diagnosis />} />
+        <Route path="/consent-forms" element={<ConsentForms />} />
+        <Route path="/accounting" element={<Accounting />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/settings" element={<Settings />} />
       </Route>

@@ -2,7 +2,8 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
     LayoutDashboard, Users, CalendarDays, Receipt,
     ClipboardList, Stethoscope, FileText, BarChart3,
-    Settings as SettingsIcon, LogOut, Pill
+    Settings as SettingsIcon, LogOut, Pill, History,
+    FlaskConical, Search, FileCheck, Calculator, TrendingUp
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
@@ -10,18 +11,23 @@ const mainNav = [
     { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/patients', icon: Users, label: 'Patients' },
     { path: '/appointments', icon: CalendarDays, label: 'Appointments' },
-    { path: '/billing', icon: Receipt, label: 'Billing' },
+    { path: '/billing', icon: Receipt, label: 'Payment' },
 ]
 
 const dentalNav = [
-    { path: '/dental-chart', icon: Stethoscope, label: 'Dental Chart' },
+    { path: '/dental-chart', icon: Stethoscope, label: 'Examination' },
+    { path: '/past-dental-treatment', icon: History, label: 'Past Treatment' },
+    { path: '/investigations', icon: FlaskConical, label: 'Investigations' },
+    { path: '/diagnosis', icon: Search, label: 'Diagnosis' },
+    { path: '/treatment-plans', icon: FileText, label: 'Treatment Plan' },
+    { path: '/prescriptions', icon: Pill, label: 'Prescription' },
+    { path: '/consent-forms', icon: FileCheck, label: 'Consent Form' },
     { path: '/procedures', icon: ClipboardList, label: 'Procedures' },
-    { path: '/treatment-plans', icon: FileText, label: 'Treatment Plans' },
-    { path: '/prescriptions', icon: Pill, label: 'Prescriptions' },
 ]
 
 const systemNav = [
-    { path: '/reports', icon: BarChart3, label: 'Reports', adminOnly: true },
+    { path: '/accounting', icon: Calculator, label: 'Accounting' },
+    { path: '/reports', icon: TrendingUp, label: 'Analysis' },
     { path: '/settings', icon: SettingsIcon, label: 'Settings', adminOnly: true },
 ]
 
@@ -62,10 +68,10 @@ export default function Sidebar({ isOpen, onClose }) {
                     <span className="sidebar-section-title">Main Menu</span>
                     {renderNavItems(mainNav)}
 
-                    <span className="sidebar-section-title" style={{ marginTop: 16 }}>Dental</span>
+                    <span className="sidebar-section-title" style={{ marginTop: 16 }}>Clinical</span>
                     {renderNavItems(dentalNav)}
 
-                    <span className="sidebar-section-title" style={{ marginTop: 16 }}>System</span>
+                    <span className="sidebar-section-title" style={{ marginTop: 16 }}>Management</span>
                     {renderNavItems(systemNav)}
                 </nav>
 

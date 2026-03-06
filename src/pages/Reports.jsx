@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Download, Calendar, TrendingUp, AlertCircle } from 'lucide-react'
+import { Download, Calendar, TrendingUp, AlertCircle, PieChart as PieIcon } from 'lucide-react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { supabase } from '../lib/supabase'
+import { SkeletonCard } from '../components/SkeletonLoader'
 
 const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#64748b']
 
 export default function Reports() {
-    const [tab, setTab] = useState('daily')
+    const [tab, setTab] = useState('monthly')
     const [invoices, setInvoices] = useState([])
     const [patients, setPatients] = useState([])
     const [appointments, setAppointments] = useState([])
@@ -17,7 +18,7 @@ export default function Reports() {
 
     const fetchData = async () => {
         const [invRes, patRes, apptRes] = await Promise.all([
-            supabase.from('invoices').select('*, patients(full_name, patient_id)').order('issued_date', { ascending: false }),
+            supabase.from('invoices').select('*, patients(full_name, patient_id), invoice_items(description, quantity, unit_price)').order('issued_date', { ascending: false }),
             supabase.from('patients').select('*').order('created_at', { ascending: false }),
             supabase.from('appointments').select('*, patients(full_name), doctors(full_name)').order('appointment_date', { ascending: false }),
         ])
@@ -27,12 +28,7 @@ export default function Reports() {
         setLoading(false)
     }
 
-    // Daily collection
-    const todayInvoices = invoices.filter(i => i.issued_date === today)
-    const todayCollection = todayInvoices.reduce((s, i) => s + Number(i.paid_amount || 0), 0)
-    const todayTotal = todayInvoices.reduce((s, i) => s + Number(i.total_amount || 0), 0)
-
-    // Monthly revenue
+    // --- a) Monthly Revenue ---
     const monthlyData = {}
     invoices.forEach(inv => {
         const month = inv.issued_date?.slice(0, 7)
@@ -43,29 +39,40 @@ export default function Reports() {
             monthlyData[month].count++
         }
     })
-    const monthlyChart = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month)).slice(-6)
+    const monthlyChart = Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month)).slice(-12)
 
-    // Outstanding
-    const outstanding = invoices.filter(i => i.status !== 'paid')
-    const totalOutstanding = outstanding.reduce((s, i) => s + (Number(i.total_amount) - Number(i.paid_amount)), 0)
-
-    // Gender distribution
-    const genderData = []
-    const genders = {}
-    patients.forEach(p => { genders[p.gender || 'unknown'] = (genders[p.gender || 'unknown'] || 0) + 1 })
-    Object.entries(genders).forEach(([name, value]) => genderData.push({ name: name.charAt(0).toUpperCase() + name.slice(1), value }))
-
-    // Age distribution
-    const ageGroups = { '0-18': 0, '19-35': 0, '36-55': 0, '56+': 0 }
-    patients.forEach(p => {
-        if (!p.date_of_birth) return
-        const age = Math.floor((Date.now() - new Date(p.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))
-        if (age <= 18) ageGroups['0-18']++
-        else if (age <= 35) ageGroups['19-35']++
-        else if (age <= 55) ageGroups['36-55']++
-        else ageGroups['56+']++
+    // --- b) Annual Revenue ---
+    const yearlyData = {}
+    invoices.forEach(inv => {
+        const year = inv.issued_date?.slice(0, 4)
+        if (year) {
+            if (!yearlyData[year]) yearlyData[year] = { year, revenue: 0, collected: 0, count: 0 }
+            yearlyData[year].revenue += Number(inv.total_amount || 0)
+            yearlyData[year].collected += Number(inv.paid_amount || 0)
+            yearlyData[year].count++
+        }
     })
-    const ageChart = Object.entries(ageGroups).map(([name, value]) => ({ name, value }))
+    const yearlyChart = Object.values(yearlyData).sort((a, b) => a.year.localeCompare(b.year))
+
+    // --- c) Treatment-wise Revenue ---
+    const treatmentData = {}
+    invoices.forEach(inv => {
+        (inv.invoice_items || []).forEach(item => {
+            const desc = item.description || 'Other'
+            if (!treatmentData[desc]) treatmentData[desc] = { name: desc, value: 0, count: 0 }
+            treatmentData[desc].value += Number(item.unit_price || 0) * Number(item.quantity || 1)
+            treatmentData[desc].count++
+        })
+    })
+    const treatmentChart = Object.values(treatmentData).sort((a, b) => b.value - a.value).slice(0, 10)
+
+    // --- d) Conversion Rate ---
+    const totalAppointments = appointments.length
+    const completedAppointments = appointments.filter(a => a.status === 'completed').length
+    const totalPatients = patients.length
+    const patientsWithInvoices = new Set(invoices.map(i => i.patient_id)).size
+    const appointmentConversion = totalAppointments > 0 ? Math.round((completedAppointments / totalAppointments) * 100) : 0
+    const patientConversion = totalPatients > 0 ? Math.round((patientsWithInvoices / totalPatients) * 100) : 0
 
     const exportCSV = (data, filename) => {
         if (!data.length) return
@@ -74,9 +81,7 @@ export default function Reports() {
         const blob = new Blob([csv], { type: 'text/csv' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
-        a.href = url
-        a.download = `${filename}_${today}.csv`
-        a.click()
+        a.href = url; a.download = `${filename}_${today}.csv`; a.click()
         URL.revokeObjectURL(url)
     }
 
@@ -88,87 +93,31 @@ export default function Reports() {
         exportCSV(data, 'invoices_report')
     }
 
-    const exportPatients = () => {
-        const data = patients.map(p => ({
-            ID: p.patient_id, Name: p.full_name, DOB: p.date_of_birth || '', Gender: p.gender,
-            Phone: p.phone || '', Email: p.email || '', BloodGroup: p.blood_group || ''
-        }))
-        exportCSV(data, 'patients_report')
-    }
-
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    if (loading) return <div className="page-fade-in"><SkeletonCard /><div style={{ marginTop: 16 }}><SkeletonCard /></div></div>
 
     return (
-        <div>
+        <div className="page-fade-in">
             <div className="page-toolbar">
                 <div className="filter-tabs">
                     {[
-                        { key: 'daily', label: 'Daily Collection', icon: Calendar },
-                        { key: 'monthly', label: 'Monthly Revenue', icon: TrendingUp },
-                        { key: 'outstanding', label: 'Outstanding Dues', icon: AlertCircle },
-                        { key: 'demographics', label: 'Demographics', icon: Calendar },
+                        { key: 'monthly', label: 'a) Monthly Revenue' },
+                        { key: 'annual', label: 'b) Annual Revenue' },
+                        { key: 'treatment', label: 'c) Treatment Revenue' },
+                        { key: 'conversion', label: 'd) Conversion Rate' },
                     ].map(t => (
                         <button key={t.key} className={`filter-tab ${tab === t.key ? 'active' : ''}`} onClick={() => setTab(t.key)}>
                             {t.label}
                         </button>
                     ))}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-secondary btn-sm" onClick={exportInvoices}><Download size={14} /> Export Invoices</button>
-                    <button className="btn btn-secondary btn-sm" onClick={exportPatients}><Download size={14} /> Export Patients</button>
-                </div>
+                <button className="btn btn-secondary btn-sm" onClick={exportInvoices}><Download size={14} /> Export</button>
             </div>
 
-            {tab === 'daily' && (
-                <>
-                    <div className="stats-grid">
-                        <div className="stat-card emerald">
-                            <div className="stat-info">
-                                <h4>Today's Collection</h4>
-                                <div className="stat-value">₹{todayCollection.toLocaleString()}</div>
-                            </div>
-                        </div>
-                        <div className="stat-card blue">
-                            <div className="stat-info">
-                                <h4>Today's Billed</h4>
-                                <div className="stat-value">₹{todayTotal.toLocaleString()}</div>
-                            </div>
-                        </div>
-                        <div className="stat-card amber">
-                            <div className="stat-info">
-                                <h4>Today's Invoices</h4>
-                                <div className="stat-value">{todayInvoices.length}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="card">
-                        <div className="card-header"><h3>Today's Invoices — {new Date().toLocaleDateString()}</h3></div>
-                        <div className="table-container">
-                            <table>
-                                <thead><tr><th>Invoice</th><th>Patient</th><th>Amount</th><th>Paid</th><th>Status</th><th>Method</th></tr></thead>
-                                <tbody>
-                                    {todayInvoices.map(i => (
-                                        <tr key={i.id}>
-                                            <td style={{ fontWeight: 600, color: 'var(--primary-600)' }}>{i.invoice_number}</td>
-                                            <td>{i.patients?.full_name}</td>
-                                            <td>₹{Number(i.total_amount).toLocaleString()}</td>
-                                            <td>₹{Number(i.paid_amount).toLocaleString()}</td>
-                                            <td><span className={`badge ${i.status}`}>{i.status}</span></td>
-                                            <td>{i.payment_method || '—'}</td>
-                                        </tr>
-                                    ))}
-                                    {todayInvoices.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--slate-400)' }}>No invoices today</td></tr>}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </>
-            )}
-
+            {/* a) Monthly Revenue */}
             {tab === 'monthly' && (
                 <div className="dashboard-grid">
                     <div className="card full-width">
-                        <div className="card-header"><h3>Monthly Revenue Overview</h3></div>
+                        <div className="card-header"><h3>16a) Monthly Revenue</h3></div>
                         <div className="card-body">
                             <ResponsiveContainer width="100%" height={300}>
                                 <BarChart data={monthlyChart}>
@@ -207,73 +156,161 @@ export default function Reports() {
                 </div>
             )}
 
-            {tab === 'outstanding' && (
-                <>
-                    <div className="stats-grid">
-                        <div className="stat-card rose">
-                            <div className="stat-info">
-                                <h4>Total Outstanding</h4>
-                                <div className="stat-value">₹{totalOutstanding.toLocaleString()}</div>
-                            </div>
-                        </div>
-                        <div className="stat-card amber">
-                            <div className="stat-info">
-                                <h4>Pending Invoices</h4>
-                                <div className="stat-value">{outstanding.length}</div>
-                            </div>
+            {/* b) Annual Revenue */}
+            {tab === 'annual' && (
+                <div className="dashboard-grid">
+                    <div className="card full-width">
+                        <div className="card-header"><h3>16b) Annual Revenue</h3></div>
+                        <div className="card-body">
+                            <ResponsiveContainer width="100%" height={300}>
+                                <BarChart data={yearlyChart}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                    <XAxis dataKey="year" tick={{ fontSize: 12 }} />
+                                    <YAxis tick={{ fontSize: 12 }} />
+                                    <Tooltip formatter={(value) => `₹${Number(value).toLocaleString()}`} />
+                                    <Legend />
+                                    <Bar name="Total Revenue" dataKey="revenue" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                                    <Bar name="Collected" dataKey="collected" fill="#10b981" radius={[6, 6, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
                         </div>
                     </div>
-                    <div className="card">
-                        <div className="card-header"><h3>Outstanding Dues</h3></div>
+                    <div className="card full-width">
+                        <div className="card-header"><h3>Yearly Breakdown</h3></div>
                         <div className="table-container">
                             <table>
-                                <thead><tr><th>Invoice</th><th>Patient</th><th>Date</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+                                <thead><tr><th>Year</th><th>Invoices</th><th>Revenue</th><th>Collected</th><th>Collection %</th></tr></thead>
                                 <tbody>
-                                    {outstanding.map(i => (
-                                        <tr key={i.id}>
-                                            <td style={{ fontWeight: 600, color: 'var(--primary-600)' }}>{i.invoice_number}</td>
-                                            <td>{i.patients?.full_name}</td>
-                                            <td>{new Date(i.issued_date).toLocaleDateString()}</td>
-                                            <td>₹{Number(i.total_amount).toLocaleString()}</td>
-                                            <td>₹{Number(i.paid_amount).toLocaleString()}</td>
-                                            <td style={{ fontWeight: 700, color: 'var(--danger)' }}>₹{(Number(i.total_amount) - Number(i.paid_amount)).toLocaleString()}</td>
-                                            <td><span className={`badge ${i.status}`}>{i.status}</span></td>
+                                    {yearlyChart.map(y => (
+                                        <tr key={y.year}>
+                                            <td style={{ fontWeight: 600 }}>{y.year}</td>
+                                            <td>{y.count}</td>
+                                            <td>₹{y.revenue.toLocaleString()}</td>
+                                            <td>₹{y.collected.toLocaleString()}</td>
+                                            <td style={{ fontWeight: 600, color: y.revenue > 0 ? (y.collected / y.revenue >= 0.8 ? 'var(--success)' : 'var(--warning)') : 'var(--slate-400)' }}>
+                                                {y.revenue > 0 ? Math.round((y.collected / y.revenue) * 100) : 0}%
+                                            </td>
                                         </tr>
                                     ))}
-                                    {outstanding.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 32, color: 'var(--slate-400)' }}>No outstanding dues! 🎉</td></tr>}
+                                    {yearlyChart.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--slate-400)' }}>No data</td></tr>}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </>
+                </div>
             )}
 
-            {tab === 'demographics' && (
+            {/* c) Treatment-wise Revenue */}
+            {tab === 'treatment' && (
                 <div className="dashboard-grid">
                     <div className="card">
-                        <div className="card-header"><h3>Gender Distribution</h3></div>
+                        <div className="card-header"><h3>16c) Treatment-wise Revenue</h3></div>
                         <div className="card-body" style={{ display: 'flex', justifyContent: 'center' }}>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <PieChart>
-                                    <Pie data={genderData} cx="50%" cy="50%" outerRadius={90} label={({ name, value }) => `${name} (${value})`} dataKey="value">
-                                        {genderData.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
+                            {treatmentChart.length > 0 ? (
+                                <ResponsiveContainer width="100%" height={300}>
+                                    <PieChart>
+                                        <Pie data={treatmentChart} cx="50%" cy="50%" outerRadius={110} label={({ name, value }) => `${name.slice(0, 15)}… ₹${value.toLocaleString()}`} dataKey="value">
+                                            {treatmentChart.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip formatter={(v) => `₹${Number(v).toLocaleString()}`} />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            ) : <p style={{ color: 'var(--slate-400)', padding: 40 }}>No treatment data</p>}
                         </div>
                     </div>
                     <div className="card">
-                        <div className="card-header"><h3>Age Distribution</h3></div>
-                        <div className="card-body" style={{ display: 'flex', justifyContent: 'center' }}>
-                            <ResponsiveContainer width="100%" height={250}>
-                                <PieChart>
-                                    <Pie data={ageChart} cx="50%" cy="50%" outerRadius={90} label={({ name, value }) => `${name} (${value})`} dataKey="value">
-                                        {ageChart.map((_, idx) => <Cell key={idx} fill={COLORS[idx % COLORS.length]} />)}
-                                    </Pie>
-                                    <Tooltip />
-                                </PieChart>
-                            </ResponsiveContainer>
+                        <div className="card-header"><h3>Top Treatments by Revenue</h3></div>
+                        <div className="table-container">
+                            <table>
+                                <thead><tr><th>#</th><th>Treatment</th><th>Count</th><th>Revenue</th></tr></thead>
+                                <tbody>
+                                    {treatmentChart.map((t, idx) => (
+                                        <tr key={t.name}>
+                                            <td>{idx + 1}</td>
+                                            <td style={{ fontWeight: 500 }}>{t.name}</td>
+                                            <td>{t.count}</td>
+                                            <td style={{ fontWeight: 600 }}>₹{t.value.toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                    {treatmentChart.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--slate-400)' }}>No data</td></tr>}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* d) Conversion Rate */}
+            {tab === 'conversion' && (
+                <div>
+                    <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+                        <div className="stat-card emerald">
+                            <div className="stat-info">
+                                <h4>Total Patients</h4>
+                                <div className="stat-value">{totalPatients}</div>
+                            </div>
+                        </div>
+                        <div className="stat-card blue">
+                            <div className="stat-info">
+                                <h4>Patients with Billing</h4>
+                                <div className="stat-value">{patientsWithInvoices}</div>
+                            </div>
+                        </div>
+                        <div className="stat-card amber">
+                            <div className="stat-info">
+                                <h4>Patient→Treatment Rate</h4>
+                                <div className="stat-value">{patientConversion}%</div>
+                            </div>
+                        </div>
+                        <div className="stat-card rose">
+                            <div className="stat-info">
+                                <h4>Total Appointments</h4>
+                                <div className="stat-value">{totalAppointments}</div>
+                            </div>
+                        </div>
+                        <div className="stat-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                            <div className="stat-info">
+                                <h4>Completed Appointments</h4>
+                                <div className="stat-value">{completedAppointments}</div>
+                            </div>
+                        </div>
+                        <div className="stat-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                            <div className="stat-info">
+                                <h4>Appointment Completion Rate</h4>
+                                <div className="stat-value">{appointmentConversion}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card" style={{ marginTop: 20 }}>
+                        <div className="card-header"><h3>16d) Conversion Rate Analysis</h3></div>
+                        <div className="card-body">
+                            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                                {/* Patient Conversion */}
+                                <div style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: 20 }}>
+                                    <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 16px' }}>
+                                        <svg viewBox="0 0 36 36">
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" strokeWidth="3" />
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray={`${patientConversion}, 100`} />
+                                            <text x="18" y="20.35" textAnchor="middle" fontSize="8" fill="var(--text-primary)" fontWeight="700">{patientConversion}%</text>
+                                        </svg>
+                                    </div>
+                                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600 }}>Patient to Treatment</h4>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--slate-400)' }}>{patientsWithInvoices} of {totalPatients} patients</p>
+                                </div>
+                                {/* Appointment Conversion */}
+                                <div style={{ flex: 1, minWidth: 200, textAlign: 'center', padding: 20 }}>
+                                    <div style={{ position: 'relative', width: 120, height: 120, margin: '0 auto 16px' }}>
+                                        <svg viewBox="0 0 36 36">
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" strokeWidth="3" />
+                                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray={`${appointmentConversion}, 100`} />
+                                            <text x="18" y="20.35" textAnchor="middle" fontSize="8" fill="var(--text-primary)" fontWeight="700">{appointmentConversion}%</text>
+                                        </svg>
+                                    </div>
+                                    <h4 style={{ fontSize: '0.875rem', fontWeight: 600 }}>Appointment Completion</h4>
+                                    <p style={{ fontSize: '0.75rem', color: 'var(--slate-400)' }}>{completedAppointments} of {totalAppointments} appointments</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

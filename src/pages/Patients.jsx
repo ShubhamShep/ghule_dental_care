@@ -7,9 +7,11 @@ import { SkeletonTable } from '../components/SkeletonLoader'
 import { MEDICAL_CONDITIONS_LIST } from '../lib/clinicalData'
 
 const initialForm = {
-    full_name: '', date_of_birth: '', gender: 'male', phone: '', email: '',
+    full_name: '', first_name: '', middle_name: '', last_name: '',
+    date_of_birth: '', gender: 'male', phone: '', email: '',
     address: '', blood_group: '', emergency_contact: '', emergency_phone: '',
     allergies: '', medical_conditions: '', current_medications: '',
+    physician_name: '', on_medication: '',
 }
 
 export default function Patients() {
@@ -47,8 +49,10 @@ export default function Patients() {
 
     const openEdit = (patient) => {
         setEditingId(patient.id)
+        const nameParts = (patient.full_name || '').split(' ')
         setForm({
             full_name: patient.full_name || '',
+            first_name: nameParts[0] || '', middle_name: nameParts.length > 2 ? nameParts[1] : '', last_name: nameParts[nameParts.length > 1 ? nameParts.length - 1 : 1] || '',
             date_of_birth: patient.date_of_birth || '',
             gender: patient.gender || 'male',
             phone: patient.phone || '',
@@ -60,6 +64,8 @@ export default function Patients() {
             allergies: patient.allergies || '',
             medical_conditions: patient.medical_conditions || '',
             current_medications: patient.current_medications || '',
+            physician_name: patient.physician_name || '',
+            on_medication: patient.on_medication || '',
         })
         setShowModal(true)
     }
@@ -188,14 +194,31 @@ export default function Patients() {
                         </div>
                         <form onSubmit={handleSave}>
                             <div className="modal-body">
-                                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--slate-400)', marginBottom: 12 }}>Personal Information</h4>
+                                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--slate-400)', marginBottom: 12 }}>2) Patient Registration</h4>
                                 <div className="form-grid">
-                                    <div className="field full">
-                                        <label>Full Name *</label>
-                                        <input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+                                    <div className="field">
+                                        <label>First Name *</label>
+                                        <input required value={form.first_name} onChange={(e) => {
+                                            const fn = e.target.value
+                                            setForm({ ...form, first_name: fn, full_name: [fn, form.middle_name, form.last_name].filter(Boolean).join(' ') })
+                                        }} />
                                     </div>
                                     <div className="field">
-                                        <label>Date of Birth</label>
+                                        <label>Middle Name</label>
+                                        <input value={form.middle_name} onChange={(e) => {
+                                            const mn = e.target.value
+                                            setForm({ ...form, middle_name: mn, full_name: [form.first_name, mn, form.last_name].filter(Boolean).join(' ') })
+                                        }} />
+                                    </div>
+                                    <div className="field">
+                                        <label>Last Name *</label>
+                                        <input required value={form.last_name} onChange={(e) => {
+                                            const ln = e.target.value
+                                            setForm({ ...form, last_name: ln, full_name: [form.first_name, form.middle_name, ln].filter(Boolean).join(' ') })
+                                        }} />
+                                    </div>
+                                    <div className="field">
+                                        <label>DOB / Age</label>
                                         <input type="date" value={form.date_of_birth} onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })} />
                                     </div>
                                     <div className="field">
@@ -207,7 +230,7 @@ export default function Patients() {
                                         </select>
                                     </div>
                                     <div className="field">
-                                        <label>Phone</label>
+                                        <label>Mobile No. *</label>
                                         <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                                     </div>
                                     <div className="field">
@@ -220,8 +243,20 @@ export default function Patients() {
                                     </div>
                                 </div>
 
-                                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--slate-400)', margin: '20px 0 12px' }}>Medical Information</h4>
+                                <h4 style={{ fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', color: 'var(--slate-400)', margin: '20px 0 12px' }}>6) Medical History</h4>
                                 <div className="form-grid">
+                                    <div className="field">
+                                        <label>a) On Medication</label>
+                                        <select value={form.on_medication} onChange={(e) => setForm({ ...form, on_medication: e.target.value })}>
+                                            <option value="">Select</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+                                    <div className="field">
+                                        <label>b) Physician Name</label>
+                                        <input value={form.physician_name} onChange={(e) => setForm({ ...form, physician_name: e.target.value })} placeholder="Physician name" />
+                                    </div>
                                     <div className="field">
                                         <label>Blood Group</label>
                                         <select value={form.blood_group} onChange={(e) => setForm({ ...form, blood_group: e.target.value })}>
