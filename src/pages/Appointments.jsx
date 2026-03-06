@@ -3,6 +3,7 @@ import { Search, Plus, X, CheckCircle, XCircle, CalendarDays, MessageCircle } fr
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 import { SkeletonTable } from '../components/SkeletonLoader'
+import { TIME_SLOTS } from '../lib/clinicalData'
 
 const initialForm = {
     patient_id: '', doctor_id: '', appointment_date: '', appointment_time: '', reason: '', notes: ''
@@ -203,6 +204,12 @@ export default function Appointments() {
                                     <div className="field">
                                         <label>Time *</label>
                                         <input type="time" required value={form.appointment_time} onChange={(e) => setForm({ ...form, appointment_time: e.target.value })} />
+                                    </div>
+                                    <div className="field">
+                                        <label>Duration</label>
+                                        <select value={form.duration || '30'} onChange={(e) => setForm({ ...form, duration: e.target.value })}>
+                                            {TIME_SLOTS.map(t => <option key={t} value={t}>{t} min</option>)}
+                                        </select>
                                     </div>
                                     <div className="field full">
                                         <label>Reason</label>

@@ -13,7 +13,7 @@ export default function Billing() {
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ patient_id: '', payment_method: 'cash', items: [{ description: '', quantity: 1, unit_price: '' }] })
+    const [form, setForm] = useState({ patient_id: '', payment_method: 'cash', items: [{ description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
     const navigate = useNavigate()
 
     useEffect(() => { fetchData() }, [])
@@ -36,7 +36,7 @@ export default function Billing() {
         )
 
     const addItem = () => {
-        setForm({ ...form, items: [...form.items, { description: '', quantity: 1, unit_price: '' }] })
+        setForm({ ...form, items: [...form.items, { description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
     }
 
     const removeItem = (idx) => {
@@ -87,7 +87,7 @@ export default function Billing() {
 
             toast.success('Invoice created!')
             setShowModal(false)
-            setForm({ patient_id: '', payment_method: 'cash', items: [{ description: '', quantity: 1, unit_price: '' }] })
+            setForm({ patient_id: '', payment_method: 'cash', items: [{ description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
             fetchData()
         } catch (err) {
             toast.error(err.message)
@@ -196,6 +196,7 @@ export default function Billing() {
                                             <option value="cash">💵 Cash</option>
                                             <option value="upi">📱 UPI</option>
                                             <option value="card">💳 Card</option>
+                                            <option value="bank_transfer">🏦 Bank Transfer</option>
                                             <option value="insurance">🏥 Insurance</option>
                                             <option value="other">Other</option>
                                         </select>
@@ -205,6 +206,14 @@ export default function Billing() {
                                 <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 12, color: 'var(--slate-700)' }}>Line Items</h4>
                                 {form.items.map((item, idx) => (
                                     <div key={idx} style={{ display: 'flex', gap: 10, marginBottom: 10, alignItems: 'flex-end' }}>
+                                        <div className="field" style={{ flex: 1.2 }}>
+                                            {idx === 0 && <label>Fee Category</label>}
+                                            <select value={item.fee_category || 'Treatment'} onChange={(e) => updateItem(idx, 'fee_category', e.target.value)}>
+                                                <option value="Consultation">Consultation</option>
+                                                <option value="X-ray">X-ray</option>
+                                                <option value="Treatment">Treatment</option>
+                                            </select>
+                                        </div>
                                         <div className="field" style={{ flex: 3 }}>
                                             {idx === 0 && <label>Description</label>}
                                             <input required placeholder="Service description" value={item.description} onChange={(e) => updateItem(idx, 'description', e.target.value)} />

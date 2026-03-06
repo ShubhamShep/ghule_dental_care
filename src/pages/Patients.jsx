@@ -4,6 +4,7 @@ import { Search, Plus, Eye, Edit, Trash2, X, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 import { SkeletonTable } from '../components/SkeletonLoader'
+import { MEDICAL_CONDITIONS_LIST } from '../lib/clinicalData'
 
 const initialForm = {
     full_name: '', date_of_birth: '', gender: 'male', phone: '', email: '',
@@ -244,7 +245,23 @@ export default function Patients() {
                                     </div>
                                     <div className="field full">
                                         <label>Medical Conditions</label>
-                                        <textarea value={form.medical_conditions} onChange={(e) => setForm({ ...form, medical_conditions: e.target.value })} rows={2} placeholder="e.g., Diabetes, Hypertension, Heart Disease" />
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px 12px', padding: '8px 0' }}>
+                                            {MEDICAL_CONDITIONS_LIST.map(cond => {
+                                                const selected = (form.medical_conditions || '').split(',').map(s => s.trim()).filter(Boolean)
+                                                const isChecked = selected.includes(cond)
+                                                return (
+                                                    <label key={cond} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', cursor: 'pointer' }}>
+                                                        <input type="checkbox" checked={isChecked} onChange={() => {
+                                                            const updated = isChecked
+                                                                ? selected.filter(s => s !== cond)
+                                                                : [...selected, cond]
+                                                            setForm({ ...form, medical_conditions: updated.join(', ') })
+                                                        }} />
+                                                        {cond}
+                                                    </label>
+                                                )
+                                            })}
+                                        </div>
                                     </div>
                                     <div className="field full">
                                         <label>Current Medications</label>

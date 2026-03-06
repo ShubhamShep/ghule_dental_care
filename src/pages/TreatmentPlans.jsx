@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, X, CheckCircle, Eye, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import { SkeletonTable } from '../components/SkeletonLoader'
+import { TREATMENT_PROCEDURES } from '../lib/clinicalData'
 
 export default function TreatmentPlans() {
     const [plans, setPlans] = useState([])
@@ -18,7 +20,7 @@ export default function TreatmentPlans() {
     const navigate = useNavigate()
     const [form, setForm] = useState({
         patient_id: '', doctor_id: '', title: '', notes: '',
-        items: [{ procedure_id: '', tooth_number: '', description: '', estimated_cost: '', notes: '' }]
+        items: [{ procedure_id: '', tooth_number: '', description: '', estimated_cost: '', notes: '', duration_value: '', duration_unit: 'Days', appointments: '' }]
     })
 
     useEffect(() => { fetchData() }, [])
@@ -39,7 +41,7 @@ export default function TreatmentPlans() {
 
     const filtered = plans.filter(p => filter === 'all' || p.status === filter)
 
-    const addItem = () => setForm({ ...form, items: [...form.items, { procedure_id: '', tooth_number: '', description: '', estimated_cost: '', notes: '' }] })
+    const addItem = () => setForm({ ...form, items: [...form.items, { procedure_id: '', tooth_number: '', description: '', estimated_cost: '', notes: '', duration_value: '', duration_unit: 'Days', appointments: '' }] })
     const removeItem = (idx) => { if (form.items.length > 1) setForm({ ...form, items: form.items.filter((_, i) => i !== idx) }) }
 
     const updateItem = (idx, key, value) => {
@@ -77,7 +79,7 @@ export default function TreatmentPlans() {
 
             toast.success('Treatment plan created!')
             setShowModal(false)
-            setForm({ patient_id: '', doctor_id: '', title: '', notes: '', items: [{ procedure_id: '', tooth_number: '', description: '', estimated_cost: '', notes: '' }] })
+            setForm({ patient_id: '', doctor_id: '', title: '', notes: '', items: [{ procedure_id: '', tooth_number: '', description: '', estimated_cost: '', notes: '', duration_value: '', duration_unit: 'Days', appointments: '' }] })
             fetchData()
         } catch (err) { toast.error(err.message) }
         finally { setSaving(false) }
@@ -104,10 +106,10 @@ export default function TreatmentPlans() {
 
     const statusColors = { planned: '#3b82f6', in_progress: '#f59e0b', completed: '#22c55e', cancelled: '#ef4444' }
 
-    if (loading) return <div className="loading-container"><div className="spinner"></div></div>
+    if (loading) return <div className="page-fade-in"><SkeletonTable rows={5} cols={6} /></div>
 
     return (
-        <div>
+        <div className="page-fade-in">
             <div className="page-toolbar">
                 <div className="filter-tabs">
                     {['all', 'planned', 'in_progress', 'completed', 'cancelled'].map(f => (
@@ -185,19 +187,43 @@ export default function TreatmentPlans() {
 
                                 <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: 12 }}>Treatment Steps</h4>
                                 {form.items.map((item, idx) => (
-                                    <div key={idx} style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'flex-end' }}>
-                                        <div className="field" style={{ flex: 2 }}>
-                                            {idx === 0 && <label>Procedure</label>}
-                                            <select value={item.procedure_id} onChange={e => updateItem(idx, 'procedure_id', e.target.value)}>
-                                                <option value="">Select / Custom</option>
-                                                {procedures.map(p => <option key={p.id} value={p.id}>{p.name} (₹{Number(p.standard_price).toLocaleString()})</option>)}
+                                    <div key={idx} style={{ display: 'flex', gap: 6, marginBottom: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                        <div className="field" style={{ flex: 2, minWidth: 180 }}>
+                                            {idx === 0 && <label>Treatment</label>}
+                                            <select value={item.procedure_id || item.description} onChange={e => {
+                                                const proc = procedures.find(p => p.id === e.target.value)
+                                                if (proc) updateItem(idx, 'procedure_id', e.target.value)
+                                                else updateItem(idx, 'description', e.target.value)
+                                            }}>
+                                                <option value="">Select Treatment</option>
+                                                <optgroup label="From Procedures Catalog">
+                                                    {procedures.map(p => <option key={p.id} value={p.id}>{p.name} (₹{Number(p.standard_price).toLocaleString()})</option>)}
+                                                </optgroup>
+                                                <optgroup label="Standard Treatments">
+                                                    {TREATMENT_PROCEDURES.map(t => <option key={t} value={t}>{t}</option>)}
+                                                </optgroup>
                                             </select>
                                         </div>
-                                        <div className="field" style={{ flex: 0.7 }}>
+                                        <div className="field" style={{ flex: 0.5, minWidth: 60 }}>
                                             {idx === 0 && <label>Tooth #</label>}
-                                            <input type="number" min="1" max="48" placeholder="—" value={item.tooth_number} onChange={e => updateItem(idx, 'tooth_number', e.target.value)} />
+                                            <input type="number" min="1" max="85" placeholder="—" value={item.tooth_number} onChange={e => updateItem(idx, 'tooth_number', e.target.value)} />
                                         </div>
-                                        <div className="field" style={{ flex: 1 }}>
+                                        <div className="field" style={{ flex: 0.5, minWidth: 60 }}>
+                                            {idx === 0 && <label>Appts</label>}
+                                            <input type="number" min="1" placeholder="1" value={item.appointments} onChange={e => updateItem(idx, 'appointments', e.target.value)} />
+                                        </div>
+                                        <div className="field" style={{ flex: 0.8, minWidth: 100 }}>
+                                            {idx === 0 && <label>Duration</label>}
+                                            <div style={{ display: 'flex', gap: 4 }}>
+                                                <input type="number" min="1" placeholder="—" value={item.duration_value} onChange={e => updateItem(idx, 'duration_value', e.target.value)} style={{ width: 50 }} />
+                                                <select value={item.duration_unit || 'Days'} onChange={e => updateItem(idx, 'duration_unit', e.target.value)} style={{ fontSize: '0.8rem' }}>
+                                                    <option value="Days">Days</option>
+                                                    <option value="Weeks">Weeks</option>
+                                                    <option value="Months">Months</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="field" style={{ flex: 0.8, minWidth: 80 }}>
                                             {idx === 0 && <label>Cost (₹)</label>}
                                             <input type="number" min="0" placeholder="0" value={item.estimated_cost} onChange={e => updateItem(idx, 'estimated_cost', e.target.value)} />
                                         </div>
