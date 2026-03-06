@@ -1,162 +1,371 @@
-// Pre-populated medicine database from clinic PDF spec
-export const MEDICINE_DATABASE = [
-    // Antibiotics
-    { name: 'Tab. Velclav 625', composition: 'Amoxycillin 500mg + Potassium Clavulanate 125mg', category: 'Antibiotic' },
-    { name: 'Tab. Clavam 625', composition: 'Amoxycillin 500mg + Potassium Clavulanate 125mg', category: 'Antibiotic' },
-    { name: 'Tab. Clavam Forte DT', composition: 'Amoxycillin 400mg + Clavulanic Acid 57mg', category: 'Antibiotic' },
-    { name: 'Tab. Clavam 375', composition: 'Amoxycillin 250mg + Potassium Clavulanate 125mg', category: 'Antibiotic' },
-    { name: 'Tab. Clavam XR', composition: 'Amoxycillin 1000mg + Clavulanic Acid 62.5mg', category: 'Antibiotic' },
-    { name: 'Tab. Amoxcla KT-DT', composition: 'Amoxycillin + Clavulanic Acid', category: 'Antibiotic' },
-    { name: 'Tab. Flagyl 400', composition: 'Metronidazole 400mg', category: 'Antibiotic' },
-    { name: 'Tab. Flagyl 200', composition: 'Metronidazole 200mg', category: 'Antibiotic' },
-    { name: 'Tab. Cefixime 200', composition: 'Cefixime 200mg', category: 'Antibiotic' },
-    { name: 'Tab. Cefig 200 CV', composition: 'Cefixime 200mg + Clavulanic Acid 125mg', category: 'Antibiotic' },
-    { name: 'Syr. Clavam BID Dry Syrup', composition: 'Amoxycillin 200mg/5ml + Clavulanic Acid 28.5mg/5ml', category: 'Antibiotic' },
-    { name: 'Syr. Clavam Forte', composition: 'Amoxycillin 400mg/5ml + Clavulanic Acid 57mg/5ml', category: 'Antibiotic' },
-    { name: 'Syr. Flagyl 200 Suspension', composition: 'Metronidazole 200mg/5ml', category: 'Antibiotic' },
+// ============================================================
+// Clinic PMS Software Data - EXACT from PDF, in PDF sequence
+// ============================================================
 
-    // Analgesics / Anti-inflammatory
-    { name: 'Tab. Ketorol', composition: 'Ketorolac 10mg', category: 'Analgesic' },
-    { name: 'Tab. Ketorol-DT', composition: 'Ketorolac 10mg', category: 'Analgesic' },
-    { name: 'Tab. Ketlok-DT', composition: 'Ketorolac 10mg', category: 'Analgesic' },
-    { name: 'Tab. Anak-SP', composition: 'Aceclofenac 100mg + Paracetamol 325mg + Serratiopeptidase 15mg', category: 'Analgesic' },
-    { name: 'Tab. Anak-P', composition: 'Aceclofenac + Paracetamol', category: 'Analgesic' },
-    { name: 'Tab. Zerodol', composition: 'Aceclofenac 100mg', category: 'Analgesic' },
-    { name: 'Tab. Zerodol-P', composition: 'Aceclofenac 100mg + Paracetamol 325mg', category: 'Analgesic' },
-    { name: 'Tab. Zerodol-S', composition: 'Aceclofenac 100mg + Serratiopeptidase 15mg', category: 'Analgesic' },
-    { name: 'Tab. Zerodol-SP', composition: 'Aceclofenac 100mg + Paracetamol 325mg + Serratiopeptidase 15mg', category: 'Analgesic' },
-    { name: 'Tab. Zerodol-MR', composition: 'Aceclofenac 100mg + Tizanidine 2mg', category: 'Analgesic' },
-    { name: 'Tab. Zerodol-TH4', composition: 'Aceclofenac 100mg + Thiocolchicoside 4mg', category: 'Analgesic' },
-    { name: 'Tab. Zerodol TC', composition: 'Aceclofenac 100mg + Paracetamol 325mg + Trypsin Chymotrypsin 150000AU', category: 'Analgesic' },
-    { name: 'Tab. Zerodol-PG 200/75 SR', composition: 'Aceclofenac 200mg + Pregabalin 75mg', category: 'Analgesic' },
-    { name: 'Tab. Brufen 600', composition: 'Ibuprofen 600mg', category: 'Analgesic' },
-    { name: 'Tab. Brufen 400', composition: 'Ibuprofen 400mg', category: 'Analgesic' },
-    { name: 'Tab. Paracetamol 500', composition: 'Paracetamol 500mg', category: 'Analgesic' },
-    { name: 'Tab. Paracetamol 650', composition: 'Paracetamol 650mg', category: 'Analgesic' },
-    { name: 'Tab. Combiflam', composition: 'Ibuprofen 400mg + Paracetamol 325mg', category: 'Analgesic' },
-    { name: 'Tab. Dolonex-DT 20mg', composition: 'Piroxicam 20mg', category: 'Analgesic' },
-    { name: 'Syr. Meftagesic DS Suspension', composition: 'Mefenamic Acid 100mg/5ml + Paracetamol 250mg/5ml', category: 'Analgesic' },
-    { name: 'Syr. Meftagesic-P Suspension', composition: 'Mefenamic Acid 50mg/5ml + Paracetamol 125mg/5ml', category: 'Analgesic' },
-
-    // Enzymes
-    { name: 'Tab. Chymorol Forte', composition: 'Trypsin Chymotrypsin 100000AU', category: 'Enzyme' },
-    { name: 'Tab. Chymoral Plus', composition: 'Diclofenac 50mg + Trypsin Chymotrypsin 50000IU', category: 'Enzyme' },
-    { name: 'Tab. Chymoral-AP', composition: 'Aceclofenac 100mg + Paracetamol 325mg + Trypsin Chymotrypsin 50000AU', category: 'Enzyme' },
-    { name: 'Tab. Tolyb', composition: 'Rutin, Papine & Trypsin', category: 'Enzyme' },
-
-    // Gastric
-    { name: 'Tab. Grab 20', composition: 'Rabeprazole 20mg', category: 'Gastric' },
-    { name: 'Cap. Grazole DSR', composition: 'Rabeprazole 20mg + Domperidone 30mg', category: 'Gastric' },
-    { name: 'Tab. Pan 20', composition: 'Pantoprazole 20mg', category: 'Gastric' },
-    { name: 'Tab. Pan 40', composition: 'Pantoprazole 40mg', category: 'Gastric' },
-    { name: 'Cap. Pan-D', composition: 'Pantoprazole 40mg + Domperidone 30mg', category: 'Gastric' },
-
-    // Supplements
-    { name: 'Tab. Levocet-M', composition: 'Levocetirizine + Montelukast', category: 'Supplement' },
-    { name: 'Tab. A2Z', composition: 'Zinc & Vitamin C, B-Complex & Essential Nutrients', category: 'Supplement' },
-    { name: 'Tab. Neurobion Forte', composition: 'Vit. B Complex + Vit. B12', category: 'Supplement' },
-    { name: 'Tab. Den-Tonic (Homeo)', composition: 'Cal. Carb 30 + Chammomilia 30', category: 'Supplement' },
-    { name: 'Cap. Lycopene Plus', composition: 'Antioxidants, Lycopene, Vitamins & Multi-Mineral', category: 'Supplement' },
-
-    // Topical / Mouth Care
-    { name: 'Gum-P (Astringent)', composition: 'Tannic Acid + Zinc Chloride + Cetrimide Gel', category: 'Topical' },
-    { name: 'Perishield Mouthwash', composition: 'Chlorhexidine 0.2%', category: 'Topical' },
-    { name: 'Stolin Gumpaint', composition: 'Tannic Acid + Zinc Chloride + Cetrimide Gel', category: 'Topical' },
-    { name: 'Betadine Gargle', composition: 'Povidone Iodine 2% w/v', category: 'Topical' },
-    { name: 'Betadine 10% Solution', composition: 'Povidone Iodine 10% w/v', category: 'Topical' },
-    { name: 'Rexidine M-Forte Gel', composition: 'Lidocaine 2% + Chlorhexidine 1% + Metronidazole 1%', category: 'Topical' },
-    { name: 'Dologel-CT Gel', composition: 'Choline Salicylate 8.7% + Lidocaine 2%', category: 'Topical' },
-    { name: 'Dologel', composition: 'Choline Salicylate 8.7% + Lidocaine 2%', category: 'Topical' },
-    { name: 'CureNext Oral Gel', composition: 'Curcuma longa Extract 10.00mg', category: 'Topical' },
-
-    // Dental Accessories
-    { name: 'Proxa-Brush Blue (Narrow)', composition: 'Inter-Dental Brush', category: 'Accessory' },
-    { name: 'Proxa-Brush Yellow (Wide)', composition: 'Inter-Dental Brush', category: 'Accessory' },
-    { name: 'Clinsodent Cleaning Powder', composition: 'Denture Cleaning Powder', category: 'Accessory' },
-    { name: 'Clinsodent Cleaning Tablet', composition: 'Denture Cleaning Tablet', category: 'Accessory' },
-    { name: 'Fixon Denture Adhesive Powder', composition: 'Denture Adhesive', category: 'Accessory' },
-    { name: 'Colgate Dental Floss', composition: 'Dental Floss', category: 'Accessory' },
-
-    // Toothpastes
-    { name: 'Toothpaste Cheerio', composition: 'Toothpaste', category: 'Toothpaste' },
-    { name: 'Toothpaste Kidodent', composition: 'Fluoride 500ppm', category: 'Toothpaste' },
-    { name: 'GC Tooth Mousse', composition: 'Recovery Toothpaste', category: 'Toothpaste' },
-    { name: 'Toothpaste Vantej', composition: 'Toothpaste', category: 'Toothpaste' },
-    { name: 'Toothpaste Shy NM', composition: 'Calcium Sodium Phosphosilicate (CSPS)', category: 'Toothpaste' },
-    { name: 'Toothpaste Senquel-F', composition: 'Potassium Nitrate + Sodium Monofluorophosphate + Triclosan', category: 'Toothpaste' },
+// ---- Section 4: Examination → Dental Chart Conditions ----
+// Exactly as listed in PDF Pages 2-3, in same order
+export const DENTAL_CONDITIONS = [
+    'Tenderness',
+    'Abfraction',
+    'Abrasion',
+    'Attrition',
+    'Avulsed',
+    'Bridge Metal',
+    'Bridge PFM',
+    'Bridge Zirconia',
+    'Calculus',
+    'Caries',
+    'Caries Arrested',
+    'Cross Bite',
+    'Crown Metal',
+    'Crown PFM',
+    'Crown SS',
+    'Crown Zirconia',
+    'Deep Bite',
+    'Diastema',
+    'Discolored',
+    'Dislodged Crown',
+    'Dislodged Restoration',
+    'Erosion',
+    'Erythroplakia',
+    'Fluorosis',
+    'Food Impaction',
+    'Fracture Subgingival',
+    'Fracture Supragingival',
+    'Fracture Vertical',
+    'Fractured Cusp',
+    'Fractured Cusp with Pulp Exposure',
+    'Gingival Abscess',
+    'Gingivitis',
+    'Grossly Decayed',
+    'Impacted Distoangular',
+    'Impacted Horizontally',
+    'Impacted Mesioangular',
+    'Impacted Vertically',
+    'Implant Supported Prosthesis',
+    'Incomplete RCT',
+    'Leukoplakia',
+    'Lichen Planus',
+    'Loose Denture',
+    'Malformed',
+    'Missing',
+    'Mobility',
+    'Open Bite',
+    'OSMF',
+    'Over-Retained Deciduous',
+    'Periapical Abscess',
+    'Pericoronitis',
+    'Periodontal Pocket',
+    'Periodontitis',
+    'Pink Tooth',
+    'Plaque',
+    'Pulp Exposure',
+    'Quack RPD',
+    'Recession',
+    'Restoration Amalgam',
+    'Restoration Composite',
+    'Restoration GIC',
+    'Restoration Miracle Mix',
+    'Root Piece',
+    'Sensitivity to cold',
+    'Sinus',
+    'Supernumerary Distomolar',
+    'Supernumerary Mesiodens',
+    'Supernumerary Paramolar',
+    'Supra-erupted',
+    'Swelling',
+    'TFO',
+    'Ulcer Non-Healing',
+    'Ulcer Traumatic',
 ]
 
-export const DOSE_OPTIONS = ['1 tab', '2ml', '2.5ml', '3ml', '5ml']
-
-export const FREQUENCY_OPTIONS = [
-    '0-0-1', '1-0-1', '1-1-1', '2 Stat', 'S-O-S', '½-½-½', '½-0-½', '1-1-1-1'
+// ---- Section 4c: Orthodontic Findings ----
+export const ORTHODONTIC_FINDINGS = [
+    'Crowding in Maxillary teeth',
+    'Crowding In Mandibular Teeth',
+    'Crowding in Maxillary & Mandibular Teeth',
+    'Spacing in Maxillary teeth',
+    'Spacing in Mandibular Teeth',
+    'Proclined Maxillary teeth',
+    'Proclined Maxillary & Mandibular Teeth',
 ]
 
-export const INSTRUCTION_OPTIONS = [
-    'After food', 'Before food', 'If pain is severe', 'With warm water', 'At bedtime',
-    'Empty stomach', 'जेवणाआधी', 'जेवणापूवी', 'जास्त दुखत असल्यास'
-]
-
-// Medical history conditions from clinical spec
+// ---- Section 6: Medical History ----
+// Exact order from PDF Page 3
 export const MEDICAL_CONDITIONS_LIST = [
-    'Allergy', 'Angiography', 'Angioplasty', 'Antiplatelet Therapy',
-    'Arthritis', 'Asthma', 'Autism', 'Carcinoma', 'CABG',
-    'Diabetes Mellitus', "Down's Syndrome", 'Epilepsy', 'Hepatitis',
-    'Hypertension', 'Hyperthyroidism', 'Hypotension', 'Hypothyroidism',
-    'Lactating Mother', 'Liver Cirrhosis', 'Lung Ailment', 'Pregnancy',
-    'Renal Ailment', 'Other'
+    'Allergy',
+    'Angiography',
+    'Angioplasty',
+    'Antiplatelet Therapy',
+    'Arthritis',
+    'Asthama',
+    'Autism',
+    'Carcinoma',
+    'CABG',
+    'Diabetes Melitus',
+    "Down's Syndrome",
+    'Epilepsy',
+    'Hepatitis',
+    'Hypertension',
+    'Hyperthyroidism',
+    'Hypotension',
+    'Hypothyroidism',
+    'Lactating Mother',
+    'Liver Cirrhosis',
+    'Lung Ailment',
+    'Other',
+    'Pregnancy',
+    'Renal Ailment',
 ]
 
-// Investigation types
+// ---- Section 7: Investigations ----
 export const DENTAL_INVESTIGATIONS = [
-    'IOPAR', 'OPG', 'CBCT Single Tooth', 'CBCT Quadrant',
-    'CBCT Maxilla', 'CBCT Mandible', 'CBCT Full Mouth', 'CBCT TMJ Open/Close'
+    'IOPAR',
+    'OPG',
+    'CBCT Single Tooth',
+    'CBCT Quadrant',
+    'CBCT Maxilla',
+    'CBCT Mandible',
+    'CBCT Full Mouth',
+    'CBCT TMJ Open/Close',
 ]
 
 export const BLOOD_INVESTIGATIONS = [
-    'CBC', 'BSL (R)', 'BSL (F)', 'BSL (PP)', 'HbA1C', 'PT', 'INR'
+    'CBC',
+    'BSL (R)',
+    'BSL (F)',
+    'BSL (PP)',
+    'HbA1C',
+    'PT',
+    'INR',
 ]
 
-// Treatment procedures from PDF
+// ---- Section 9: Treatment Plan - Treatments List ----
+// Exact order from PDF Pages 4-5
 export const TREATMENT_PROCEDURES = [
-    'Alveoloplasty', 'Biopsy', 'Bone Augmentation Surgery',
-    'Bridge Maryland', 'Bridge Metal', 'Bridge PFM', 'Bridge Zirconia',
-    'Cast Partial Denture', 'Ceramic Veneer',
-    'Complete Denture Basic', 'Complete Denture BPS', 'Complete Denture High Impact', 'Complete Denture Lucitone',
-    'Composite Veneer', 'Crown Re-cementation', 'Cyst Removal Surgery',
-    'Deep Curettage', 'Digital Mock up',
+    'Alveoloplasty',
+    'Biopsy',
+    'Bone Augmentation Surgery',
+    'Bridge Maryland',
+    'Bridge Metal',
+    'Bridge PFM',
+    'Bridge Zirconia',
+    'Cast Partial Denture',
+    'Ceramic Veneer',
+    'Complete Denture Basic',
+    'Complete Denture BPS',
+    'Complete Denture High Impact',
+    'Complete Denture Lucitone',
+    'Composite Veneer',
+    'Crown Re-cementation',
+    'Cyst Removal Surgery',
+    'Deep Curettage',
+    'Digital Mock up',
     'Direct Sinus Lift Surgery with Bone Grafting',
-    'Enameloplasty', 'Extraction', 'Extraction Deciduous tooth',
-    'Extraction F/b Metal Bridge', 'Extraction F/b PFM Bridge', 'Extraction F/b Zirconia Bridge',
-    'Extraction Over-retained tooth', 'Extraction Surgical',
-    'Fluoride Application', 'Follow-Up',
-    'Implant Supported Denture', 'Implant Supported Metal Bridge', 'Implant Supported Metal Crown',
-    'Implant Supported Over-Denture', 'Implant Supported PFM Bridge', 'Implant Supported PFM Crown',
-    'Implant Supported Zirconia Bridge', 'Implant Supported Zirconia Crown',
+    'Enameloplasty',
+    'Extraction',
+    'Extraction Deciduous tooth',
+    'Extraction F/b Metal Bridge',
+    'Extraction F/b PFM Bridge',
+    'Extraction F/b Zirconia Bridge',
+    'Extraction Over-retained tooth',
+    'Extraction Surgical',
+    'Fluoride Application',
+    'Follow-Up',
+    'Implant Supported Denture',
+    'Implant Supported Metal Bridge',
+    'Implant Supported Metal Crown',
+    'Implant Supported Over-Denture',
+    'Implant Supported PFM Bridge',
+    'Implant Supported PFM Crown',
+    'Implant Supported Zirconia Bridge',
+    'Implant Supported Zirconia Crown',
     'Indirect Sinus Lift Surgery with Bone Grafting',
-    'Orthodontic Treatment', 'Orthodontic Treatment with Ceramic Braces',
-    'Orthodontic Treatment with Clear Aligners', 'Orthodontic Treatment with Metal Braces',
+    'Orthodontic Treatment',
+    'Orthodontic Treatment with Ceramic Braces',
+    'Orthodontic Treatment with Clear Aligners',
+    'Orthodontic Treatment with Metal Braces',
     'Orthodontic Treatment with Self-Ligating Ceramic Braces',
     'Orthodontic Treatment with Self-Ligating Metal Braces',
-    'Periodontal Surgery', 'Pit & Fissure Sealant',
-    'Pulpectomy F/b SS Crown', 'Pulpectomy Only',
-    'RCT (Apexification)', 'RCT F/b Composite Restoration only',
-    'RCT F/b Emax Crown', 'RCT F/b Emax Onlay', 'RCT F/b Metal Crown',
-    'RCT F/b PFM Crown', 'RCT F/b Tooth Whitening', 'RCT F/b Zirconia Crown', 'RCT Only',
-    'Re-Do-Crown', 'Re-Do-POR', 'Re-Do-Restoration',
-    'Removable Partial Denture – Basic', 'Removable Partial Denture – Flexible',
-    'Repair Complete Denture', 'Repair RPD',
-    'RE-RCT F/b Emax Onlay', 'RE-RCT F/b Metal Crown', 'RE-RCT F/b PFM Crown',
-    'RE-RCT F/b Zirconia Crown', 'RE-RCT Only',
-    'Restoration Amalgam', 'Restoration Composite',
-    'Restoration Composite-Direct Pulp Capping', 'Restoration Composite-Indirect Pulp Capping',
-    'Restoration GIC', 'Restoration ZOE',
-    'Scaling', 'SDF Application', 'Segment Re-attachment', 'Segment Re-attachment with RCT',
-    'Surgical Endodontics', 'Tooth Splinting', 'Tooth Supported Over-Denture', 'Tooth Whitening',
+    'Periodontal Surgery',
+    'Pit & Fissure Sealant',
+    'Pulpectomy F/b SS Crown',
+    'Pulpectomy Only',
+    'RCT (Apexification)',
+    'RCT F/b Composite Restoration only',
+    'RCT F/b Emax Crown',
+    'RCT F/b Emax Onlay',
+    'RCT F/b Metal Crown',
+    'RCT F/b PFM Crown',
+    'RCT F/b Tooth Whitening',
+    'RCT F/b Zirconia Crown',
+    'RCT Only',
+    'Re-Do-Crown',
+    'Re-Do-POR',
+    'Re-Do-Restoration',
+    'Removable Partial Denture – Basic',
+    'Removable Partial Denture – Flexible',
+    'Repair Complete Denture',
+    'Repair RPD',
+    'RE-RCT F/b Emax Onlay',
+    'RE-RCT F/b Metal Crown',
+    'RE-RCT F/b PFM Crown',
+    'RE-RCT F/b Zirconia Crown',
+    'RE-RCT Only',
+    'Restoration Amalgam',
+    'Restoration Composite',
+    'Restoration Composite-Direct Pulp Capping',
+    'Restoration Composite-Indirect Pulp Capping',
+    'Restoration GIC',
+    'Restoration ZOE',
+    'Scaling',
+    'SDF Application',
+    'Segment Re-attachment',
+    'Segment Re-attachment with RCT',
+    'Surgical Endodontics',
+    'Tooth Splinting',
+    'Tooth Supported Over-Denture',
+    'Tooth whitening',
 ]
 
-// Fee categories from payment section
-export const FEE_CATEGORIES = ['Consultation', 'X-ray', 'Treatment']
+// ---- Section 10: Prescription - Medicine Database ----
+// Exact order, exact names from PDF Pages 5-9
+export const MEDICINE_DATABASE = [
+    { name: 'Tab. Velclav 625', composition: 'Amoxycliin 500mg + Potassium Cluavulanate 125mg' },
+    { name: 'Tab. Clavam 625', composition: 'Amoxycliin 500mg + Potassium Cluavulanate 125mg' },
+    { name: 'Tab. Clavam Forte DT', composition: 'Amoxycillin (400mg) + Clavulanic Acid (57mg)' },
+    { name: 'Tab. Clavam 375', composition: 'Amoxycliin 250mg + Potassium Cluavulanate 125mg' },
+    { name: 'Tab. Clavam XR', composition: 'Amoxycillin (1000mg) + Clavulanic Acid (62.5mg)' },
+    { name: 'Tab. Amoxcla KT-DT', composition: '' },
+    { name: 'Syr. Meftagesic DS Suspension', composition: 'Mefenamic Acid (100mg/5ml) + Paracetamol (250mg/5ml)' },
+    { name: 'Syr. Meftagesic-P Suspension', composition: 'Mefenamic Acid (50mg/5ml) + Paracetamol (125mg/5ml)' },
+    { name: 'Syr. Clavam BID Dry Syrup', composition: 'Amoxycillin (200mg/5ml) + Clavulanic Acid (28.5mg/5ml)' },
+    { name: 'Syr. Clavam Forte', composition: 'Amoxycillin (400mg/5ml) + Clavulanic Acid (57mg/5ml)' },
+    { name: 'Syr. Flagyl 200 Suspension', composition: 'Metronidazole (200mg/5ml)' },
+    { name: 'Tab. Flagyl 400', composition: 'metronidazole 400mg' },
+    { name: 'Tab. Flagyl 200mg', composition: 'Metronidazole (200mg)' },
+    { name: 'Tab. Ketlok- DT', composition: 'Ketorolac (10mg)' },
+    { name: 'Tab. Ketorol', composition: 'Ketorolac (10mg)' },
+    { name: 'Tab. Ketorol-DT', composition: 'Ketorolac (10mg)' },
+    { name: 'Tab. Anak-SP', composition: 'Aceclofenac (100mg) + Paracetamol (325mg) + Serratiopeptidase (15mg)' },
+    { name: 'Tab. Anak-P', composition: '' },
+    { name: 'Tab. Zerodol', composition: 'Aceclofenac (100mg)' },
+    { name: 'Tab. Zerodol-P', composition: 'Aceclofenac (100mg) + Paracetamol (325mg)' },
+    { name: 'Tab. Zerodol-S', composition: 'Aceclofenac (100mg) + Serratiopeptidase (15mg)' },
+    { name: 'Tab. Zerodol-SP', composition: 'Aceclofenac (100mg) + Paracetamol (325mg) + Serratiopeptidase (15mg)' },
+    { name: 'Tab. Zerodol-MR', composition: 'Aceclofenac (100mg) + Tizanidine (2mg)' },
+    { name: 'Tab. Zerodol-TH4', composition: 'Aceclofenac (100mg) + Thiocolchicoside (4mg)' },
+    { name: 'Tab. Zerodol TC', composition: 'Aceclofenac (100mg) + Paracetamol (325mg) + Trypsin Chymotrypsin (150000AU)' },
+    { name: 'Tab. Zerodol-PG 200/75 SR', composition: 'Aceclofenac (200mg) + Pregabalin (75mg)' },
+    { name: 'Tab. Chymorol Forte', composition: 'Trypsin Chymotrypsin (100000AU)' },
+    { name: 'Tab. Chymoral Plus', composition: 'Diclofenac (50mg) + Trypsin Chymotrypsin (50000IU)' },
+    { name: 'Tab. Chymoral-AP', composition: 'Aceclofenac (100mg) + Paracetamol (325mg) + Trypsin Chymotrypsin (50000AU)' },
+    { name: 'Tab. Tolyb', composition: 'Rutin, Papine & Trypsin' },
+    { name: 'Tab. Cefixzime 200', composition: 'Cefixime 200mg' },
+    { name: 'Tab. Cefig 200 CV', composition: 'Cefixime (200mg) + Clavulanic Acid (125mg)' },
+    { name: 'Gum-P (Astringent)', composition: 'Tannic Acid + Zinc Chloride + Cetrimide Liquid Gel' },
+    { name: 'Perishield (Chlorhedixine 0.2% Mouthwash)', composition: '' },
+    { name: 'Stolin (Gumpaint)', composition: 'Tannic Acid + Zinc Chloride + Cetrimide Liquid Gel' },
+    { name: 'Proxa-Brush Blue- Narrow Space (Inter-Dental Brush)', composition: '' },
+    { name: 'Proxa-Brush Yellow- Wide Space (Inter-Dental Brush)', composition: '' },
+    { name: 'Clinsodent Denture Cleaning Powder', composition: '' },
+    { name: 'Clinsodent Denture Cleaning Tablet', composition: '' },
+    { name: 'Fixon Denture Adhesive Powder', composition: '' },
+    { name: 'Betadine Gargle', composition: 'Povidone Iodine (2% w/v)' },
+    { name: 'Betadine 10% Solution', composition: 'Povidone Iodine (10% w/v)' },
+    { name: 'Rexidine M-Forte Gel', composition: 'Lidocaine (2% w/w) + Chlorhexidine Gluconate (1% w/w) + Metronidazole (1% w/w)' },
+    { name: 'Dologel-CT Gel', composition: 'Choline Salicylate (8.7% w/w) + Lidocaine (2% w/w)' },
+    { name: 'Dologel', composition: 'Choline Salicylate (8.7% w/w) + Lidocaine (2% w/w)' },
+    { name: 'Tab. Grab. 20', composition: 'Rabeprazole (20mg)' },
+    { name: 'Cap. Grazole DSR', composition: 'Rabeprazole-20mg + Domperidone-30mg' },
+    { name: 'Tab. Pan 20', composition: 'Pantoprazole (20mg)' },
+    { name: 'Tab. Pan 40', composition: 'Pantoprazole (40mg)' },
+    { name: 'Cap. Pan-D', composition: 'Pantoprazole (40mg) + Domperidone (30mg)' },
+    { name: 'Tab. Brufen 600', composition: 'Ibuprofen (600mg)' },
+    { name: 'Tab. Brufen 400', composition: 'Ibuprofen (400mg)' },
+    { name: 'Tab. Paracetamol 500', composition: 'Paracetamol 500mg' },
+    { name: 'Tab. Paracetamol 650', composition: 'Paracetamol 650mg' },
+    { name: 'Tab. Combiflam', composition: 'Ibuprofen (400mg) + Paracetamol (325mg)' },
+    { name: 'Tab. Dolonex-DT 20mg', composition: 'Piroxicam (20mg)' },
+    { name: 'Tab. Levocet-M', composition: '' },
+    { name: 'Tab. A2Z', composition: 'Zinc & Vitamin C for Immunity, B-Complex & Essential Nutrients' },
+    { name: 'Tab. Neurobion Forte', composition: 'Vit. B Complex + Vit. B12' },
+    { name: 'Tab. Den-Tonic (Homeo)', composition: 'Cal. Carb 30 + Chammomilia 30' },
+    { name: 'Ointment', composition: '' },
+    { name: 'Cap. Lycopene Plus', composition: 'Antioxidants, Lycopene, Vitamins & Multi-Mineral Capsules' },
+    { name: 'CureNext Oral Gel', composition: 'Curcuma longa Extract 10.00 mg' },
+    { name: 'Toothpaste Cheerio', composition: '' },
+    { name: 'Toothpaste Kidodent', composition: 'Fluoride 500ppm' },
+    { name: 'Toothpaste GC Tooth mousse', composition: '' },
+    { name: 'Toothpaste Vantej', composition: '' },
+    { name: 'Toothpaste Shy NM', composition: 'Calcium Sodium Phosphosilicate (CSPS)' },
+    { name: 'Toothpaste Senquel-F', composition: 'Potassium Nitrate BP, Sodium Monofluorophosphate USP, Triclosan USP' },
+    { name: 'Colgate Dental Floss', composition: '' },
+]
 
-// Time slot options for appointments
+// ---- Section 10: Dose options (exact from PDF) ----
+export const DOSE_OPTIONS = [
+    '1 tab',
+    '2ml',
+    '2.5ml',
+    '3ml',
+    '5ml',
+]
+
+// ---- Section 10: Frequency options (exact from PDF) ----
+export const FREQUENCY_OPTIONS = [
+    '0-0-1',
+    '1-0-1',
+    '1-1-1',
+    '2 Stat',
+    'S-O-S',
+    '½-½-½',
+    '½-0-½',
+    '1-1-1-1',
+]
+
+// ---- Section 10: Instruction options (exact from PDF) ----
+export const INSTRUCTION_OPTIONS = [
+    'जेवणाआधी',
+    'जेवणापूवी',
+    'जास्त दुखत असल्यास',
+]
+
+// ---- Section 2b / 12: Payment - Fee categories ----
+export const FEE_CATEGORIES = [
+    'Consultation',
+    'X ray',
+    'Treatment',
+]
+
+// ---- Section 2b / 12: Payment - Mode ----
+export const PAYMENT_MODES = [
+    'Cash',
+    'UPI',
+    'Bank Transfer',
+]
+
+// ---- Section 3: Appointment - Time Slots ----
 export const TIME_SLOTS = [30, 45, 60, 90, 120]
+
+// ---- Section 12: Payment table columns ----
+// Sr. No. | Total Treatment Charges | Date | Amount | Mode | Balance | Remark
+
+// ---- Section 15: Accounting categories ----
+export const ACCOUNTING_CATEGORIES = [
+    'Staff Salary',
+    'Electricity Bill',
+    'Lab Bill',
+    'Dental Material purchase',
+    'Stationery Expense',
+    'Repair',
+    'Other Expense',
+]
+
+// ---- Section 16: Analysis types ----
+export const ANALYSIS_TYPES = [
+    'Monthly revenue',
+    'Annual Revenue',
+    'Treatment wise Revenue',
+    'Conversion Rate',
+]

@@ -13,7 +13,7 @@ export default function Billing() {
     const [loading, setLoading] = useState(true)
     const [showModal, setShowModal] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [form, setForm] = useState({ patient_id: '', payment_method: 'cash', items: [{ description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
+    const [form, setForm] = useState({ patient_id: '', payment_method: 'Cash', items: [{ description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
     const navigate = useNavigate()
 
     useEffect(() => { fetchData() }, [])
@@ -87,7 +87,7 @@ export default function Billing() {
 
             toast.success('Invoice created!')
             setShowModal(false)
-            setForm({ patient_id: '', payment_method: 'cash', items: [{ description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
+            setForm({ patient_id: '', payment_method: 'Cash', items: [{ description: '', fee_category: 'Treatment', quantity: 1, unit_price: '' }] })
             fetchData()
         } catch (err) {
             toast.error(err.message)
@@ -191,14 +191,11 @@ export default function Billing() {
                                         </select>
                                     </div>
                                     <div className="field">
-                                        <label>Payment Method</label>
+                                        <label>Mode</label>
                                         <select value={form.payment_method} onChange={(e) => setForm({ ...form, payment_method: e.target.value })}>
-                                            <option value="cash">💵 Cash</option>
-                                            <option value="upi">📱 UPI</option>
-                                            <option value="card">💳 Card</option>
-                                            <option value="bank_transfer">🏦 Bank Transfer</option>
-                                            <option value="insurance">🏥 Insurance</option>
-                                            <option value="other">Other</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="Bank Transfer">Bank Transfer</option>
                                         </select>
                                     </div>
                                 </div>
@@ -210,7 +207,7 @@ export default function Billing() {
                                             {idx === 0 && <label>Fee Category</label>}
                                             <select value={item.fee_category || 'Treatment'} onChange={(e) => updateItem(idx, 'fee_category', e.target.value)}>
                                                 <option value="Consultation">Consultation</option>
-                                                <option value="X-ray">X-ray</option>
+                                                <option value="X ray">X ray</option>
                                                 <option value="Treatment">Treatment</option>
                                             </select>
                                         </div>
